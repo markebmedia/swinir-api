@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: swinir-enhancer
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python enhance.py
+    envVars:
+      - key: PORT
+        value: 5000
+    plan: free
