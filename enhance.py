@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify
 from PIL import Image
-import io
 import traceback
+import os
 
 app = Flask(__name__)
 
@@ -15,12 +15,10 @@ def enhance():
         image_file = request.files['image']
         print("📸 Received file:", image_file.filename)
 
-        # Validate the image using PIL
         image = Image.open(image_file.stream)
-        image.verify()  # Ensure it's a valid image
+        image.verify()
         print("✅ Image verified")
 
-        # Simulate enhancement and return a dummy URL
         enhanced_url = "https://dummy-markeb.s3.amazonaws.com/enhanced.jpg"
         return jsonify({ "enhanced_url": enhanced_url })
 
@@ -30,4 +28,7 @@ def enhance():
         return jsonify({ "error": str(e) }), 500
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    # ✅ Use PORT env if it exists (Render), otherwise default to 5050 locally
+    port = int(os.environ.get("PORT", 5050))
+    app.run(host="0.0.0.0", port=port)
+
