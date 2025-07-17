@@ -26,7 +26,14 @@ typing_extensions==4.14.1
 urllib3==2.5.0
 Werkzeug==3.1.3
 PyYAML==6.0.1
-scipy
+scipy==1.13.1  # Added explicitly with version
+tqdm==4.66.4   # Required by BasicSR
+basicsr==1.4.2 # AI enhancement backend
+facexlib==0.3.0
+gfpgan==1.3.8
+scikit-image==0.22.0
+imageio==2.34.1  # Optional but recommended for image file support
+
 
 
 
