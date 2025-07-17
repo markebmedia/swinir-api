@@ -2,20 +2,26 @@
 import sys
 import os
 
-# Add cloned BasicSR folder to Python path to resolve imports
-sys.path.append(os.path.join(os.getcwd(), 'BasicSR'))
+# Dynamically add BasicSR folder to Python path (works on Render + locally)
+base_dir = os.path.abspath(os.path.dirname(__file__))
+sys.path.insert(0, os.path.join(base_dir, 'BasicSR'))
 
 import torch
 import numpy as np
 import cv2
 from basicsr.archs.swinir_arch import SwinIR
 
-# Path to your pretrained model (adjust if needed)
-model_path = "experiments/pretrained_models/SwinIR_model.pth"
+# Absolute path to your pretrained model (relative to this script)
+model_path = os.path.join(base_dir, "experiments", "pretrained_models", "SwinIR_model.pth")
 
+# Load SwinIR model
 def load_model():
+    if not os.path.exists(model_path):
+        raise FileNotFoundError(f"❌ SwinIR model not found at: {model_path}")
+
+    print("📦 Loading SwinIR model...")
     model = SwinIR(
-        upscale=4,
+        upscale=4,  # Use 1 if you don't want super-resolution
         in_chans=3,
         img_size=64,
         window_size=8,
@@ -27,26 +33,40 @@ def load_model():
         upsampler='nearest+conv',
         resi_connection='1conv'
     )
+
     pretrained = torch.load(model_path, map_location='cpu')
     model.load_state_dict(pretrained['params'], strict=True)
     model.eval()
+    print("✅ SwinIR model loaded successfully")
     return model
 
+# Enhance image with SwinIR
 def enhance_with_swinir(input_path, output_path):
-    # Load image using OpenCV (BGR)
-    img = cv2.imread(input_path, cv2.IMREAD_COLOR).astype(np.float32) / 255.0
-    # Convert to CHW and Tensor
-    img = torch.from_numpy(np.transpose(img, (2, 0, 1))).float().unsqueeze(0)
+    print(f"🖼️ Enhancing image: {input_path}")
+    try:
+        # Load image using OpenCV (BGR)
+        img = cv2.imread(input_path, cv2.IMREAD_COLOR)
+        if img is None:
+            raise ValueError("❌ Failed to read image. Make sure the path is correct.")
 
-    model = load_model()
+        img = img.astype(np.float32) / 255.0
+        img_tensor = torch.from_numpy(np.transpose(img, (2, 0, 1))).float().unsqueeze(0)  # CHW -> BCHW
 
-    with torch.no_grad():
-        output = model(img)
+        # Load model
+        model = load_model()
 
-    # Convert tensor back to HWC image (RGB)
-    output_img = output.squeeze().clamp(0, 1).cpu().numpy()
-    output_img = (np.transpose(output_img, (1, 2, 0)) * 255.0).round().astype(np.uint8)
-    # OpenCV uses BGR, convert RGB->BGR before saving
-    output_img = cv2.cvtColor(output_img, cv2.COLOR_RGB2BGR)
+        with torch.no_grad():
+            output_tensor = model(img_tensor)
 
-    cv2.imwrite(output_path, output_img)
+        # Convert output tensor to image
+        output_img = output_tensor.squeeze().clamp(0, 1).cpu().numpy()
+        output_img = (np.transpose(output_img, (1, 2, 0)) * 255.0).round().astype(np.uint8)
+        output_img = cv2.cvtColor(output_img, cv2.COLOR_RGB2BGR)  # Convert back to BGR for OpenCV
+
+        cv2.imwrite(output_path, output_img)
+        print(f"✅ Enhanced image saved to: {output_path}")
+
+    except Exception as e:
+        print("🔥 Enhancement failed:", e)
+        raise e
+

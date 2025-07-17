@@ -14,11 +14,9 @@ __pycache__/
 # Outputs folder where enhanced images are saved locally
 outputs/
 
-# Git submodules (if you remove BasicSR folder from repo and add as submodule)
-BasicSR/
 
 # MacOS system files (optional)
 .DS_Store
 
 # Jupyter Notebook checkpoints (if any)
-.ipynb_checkpoints/
+.ipynb_checkpoints
