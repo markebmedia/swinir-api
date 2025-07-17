@@ -2,13 +2,15 @@ services:
   - type: web
     name: swinir-enhancer
     env: python
-    runtime: 3.10.12
+    plan: free
     buildCommand: pip install -r requirements.txt
     startCommand: python enhance.py
     envVars:
       - key: PORT
         value: 5000
-    plan: free
+      - key: PYTHON_VERSION
+        value: 3.10.12
+
 
 
 
